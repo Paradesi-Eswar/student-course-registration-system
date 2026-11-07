@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Registration - Student Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/student/dashboard.html" class="sidebar-brand">
+          <span>🎓</span>
+          <span>Student Portal</span>
+        </a>
+        <span class="sidebar-badge">Student</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigation</div>
+        <a href="/student/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/student/courses.html" class="sidebar-link">
+          <span class="icon">📖</span>
+          <span>Available Courses</span>
+        </a>
+        <a href="/student/register-course.html" class="sidebar-link active">
+          <span class="icon">✍️</span>
+          <span>Course Registration</span>
+        </a>
+        <a href="/student/my-courses.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>My Registrations</span>
+        </a>
+        <a href="/student/profile.html" class="sidebar-link">
+          <span class="icon">👤</span>
+          <span>Student Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-user-name">Student</span>
+          <span class="user-snippet-role" id="sidebar-user-roll">Roll No</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Course Registration</h1>
+        </div>
+        <div class="topbar-right">
+          <a href="/student/courses.html" class="btn btn-secondary btn-sm">Browse Catalog</a>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <div style="max-width: 800px; margin: 0 auto;">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><span>✍️</span> Register for an Academic Course</h2>
+            </div>
+
+            <!-- Instructions and Business Rules Alert -->
+            <div class="alert alert-info" style="font-size: 0.88rem; line-height: 1.6;">
+              <div><strong>Registration Guidelines:</strong></div>
+              <ul style="padding-left: 1.25rem; margin-top: 0.35rem;">
+                <li>Select a course from the available college curriculum below.</li>
+                <li><strong>Duplicate registrations are strictly prohibited</strong>: You cannot register for a course you are already enrolled in.</li>
+                <li>Registration date is automatically recorded upon submission.</li>
+              </ul>
+            </div>
+
+            <div id="reg-form-alert" class="alert alert-danger" style="display: none;"></div>
+
+            <form id="course-reg-form">
+              <div class="form-group">
+                <label class="form-label" for="select-course-input">Select Course to Register <span class="required">*</span></label>
+                <select id="select-course-input" class="form-select" required>
+                  <option value="">-- Choose an available course --</option>
+                </select>
+                <span class="form-hint">Shows all courses offered this academic term.</span>
+              </div>
+
+              <!-- Selected Course Preview Card -->
+              <div id="course-preview-box" style="display: none; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                  <div>
+                    <span class="course-code-pill" id="preview-code">CS101</span>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; margin-top: 0.5rem;" id="preview-title">Course Title</h3>
+                  </div>
+                  <span class="badge badge-neutral" id="preview-credits">4 Credits</span>
+                </div>
+                <div style="display: flex; gap: 1rem; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                  <span id="preview-dept">Dept: Computer Science</span>
+                  <span>•</span>
+                  <span id="preview-sem">Semester 1</span>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;" id="preview-desc">
+                  Course syllabus outline and description.
+                </p>
+                <div id="preview-status-notice" style="margin-top: 1rem;"></div>
+              </div>
+
+              <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <a href="/student/courses.html" class="btn btn-secondary">Browse Grid View</a>
+                <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-reg">Confirm & Register</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let availableCourses = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'student') {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        document.getElementById('sidebar-user-name').innerText = session.user.name;
+        document.getElementById('sidebar-user-roll').innerText = session.user.roll_no;
+
+        const data = await API.get('/api/student/courses');
+        if (!data.success) return;
+
+        availableCourses = data.courses;
+        const select = document.getElementById('select-course-input');
+
+        availableCourses.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.course_id;
+          const regTag = c.is_registered ? ' [ALREADY REGISTERED]' : '';
+          opt.innerText = `${c.course_code} - ${c.course_name} (${c.credits} Credits, ${c.department})${regTag}`;
+          select.appendChild(opt);
+        });
+
+        // Check if preselected in query param ?course_id=...
+        const urlParams = new URLSearchParams(window.location.search);
+        const presetId = urlParams.get('course_id');
+        if (presetId) {
+          select.value = presetId;
+          updatePreview(presetId);
+        }
+
+        select.addEventListener('change', () => {
+          updatePreview(select.value);
+        });
+      } catch (err) {
+        console.error('Error loading courses for registration:', err);
+        showToast('Error loading course list.', 'error');
+      }
+    });
+
+    function updatePreview(courseId) {
+      const previewBox = document.getElementById('course-preview-box');
+      const submitBtn = document.getElementById('btn-submit-reg');
+      const noticeBox = document.getElementById('preview-status-notice');
+
+      if (!courseId) {
+        previewBox.style.display = 'none';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      const c = availableCourses.find(course => String(course.course_id) === String(courseId));
+      if (!c) {
+        previewBox.style.display = 'none';
+        return;
+      }
+
+      previewBox.style.display = 'block';
+      document.getElementById('preview-code').innerText = c.course_code;
+      document.getElementById('preview-title').innerText = c.course_name;
+      document.getElementById('preview-credits').innerText = `${c.credits} Credits`;
+      document.getElementById('preview-dept').innerText = `Dept: ${c.department}`;
+      document.getElementById('preview-sem').innerText = `Semester ${c.semester}`;
+      document.getElementById('preview-desc').innerText = c.description || 'No detailed course description provided.';
+
+      if (c.is_registered) {
+        noticeBox.innerHTML = `
+          <div class="alert alert-danger" style="margin-bottom: 0;">
+            ⚠️ <strong>Already Registered:</strong> You are already registered for this course (Status: ${escapeHTML(c.registration_status || 'Registered')}). Duplicate registration is blocked.
+          </div>
+        `;
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Already Enrolled';
+      } else {
+        noticeBox.innerHTML = `
+          <div class="alert alert-success" style="margin-bottom: 0;">
+            ✅ You are eligible to register for this course for the upcoming term.
+          </div>
+        `;
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Confirm & Register';
+      }
+    }
+
+    document.getElementById('course-reg-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const courseId = document.getElementById('select-course-input').value;
+      const alertBox = document.getElementById('reg-form-alert');
+      const submitBtn = document.getElementById('btn-submit-reg');
+
+      if (!courseId) return;
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Processing Registration...';
+
+      try {
+        const response = await API.post('/api/student/register-course', { course_id: courseId });
+        showToast(response.message || 'Course registration confirmed!', 'success');
+        setTimeout(() => {
+          window.location.href = '/student/my-courses.html';
+        }, 1000);
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.innerText = err.message || 'Registration failed.';
+        alertBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Confirm & Register';
+      }
+    });
+  </script>
+</body>
+</html>
+

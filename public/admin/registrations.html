@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Registrations - Admin Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin/dashboard.html" class="sidebar-brand">
+          <span>🛡️</span>
+          <span>Admin Portal</span>
+        </a>
+        <span class="sidebar-badge" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">Admin</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Administration</div>
+        <a href="/admin/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/courses.html" class="sidebar-link">
+          <span class="icon">📚</span>
+          <span>Manage Courses</span>
+        </a>
+        <a href="/admin/add-course.html" class="sidebar-link">
+          <span class="icon">➕</span>
+          <span>Add New Course</span>
+        </a>
+        <a href="/admin/students.html" class="sidebar-link">
+          <span class="icon">👨‍🎓</span>
+          <span>Registered Students</span>
+        </a>
+        <a href="/admin/registrations.html" class="sidebar-link active">
+          <span class="icon">📝</span>
+          <span>All Registrations</span>
+        </a>
+        <a href="/admin/course-students.html" class="sidebar-link">
+          <span class="icon">👥</span>
+          <span>Course Roster</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-admin-name">Administrator</span>
+          <span class="user-snippet-role">Super Admin</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Master Registration Records</h1>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print Report</button>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <div class="search-input-wrapper">
+              <input type="text" id="reg-search" class="form-control" placeholder="🔍 Search student name, roll no, course code...">
+            </div>
+
+            <div class="filter-item">
+              <select id="reg-status-filter" class="form-select">
+                <option value="all">All Statuses</option>
+                <option value="Registered">Registered</option>
+                <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
+                <option value="Dropped">Dropped</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <button class="btn btn-secondary btn-sm" onclick="resetRegFilters()">Reset</button>
+          </div>
+          <div>
+            <span id="reg-total-count" style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">
+              Total Records: 0
+            </span>
+          </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span>📝</span> Institution-wide Course Registrations</h3>
+          </div>
+
+          <div id="registrations-table-container">
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              Loading registrations...
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Status Update Modal -->
+  <div class="modal-backdrop" id="status-modal">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Update Registration Status</h3>
+        <button class="modal-close" onclick="closeStatusModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="status-reg-id">
+        <div class="form-group">
+          <label class="form-label" for="new-status-select">Select New Status</label>
+          <select id="new-status-select" class="form-select">
+            <option value="Registered">Registered</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Dropped">Dropped</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeStatusModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitStatusUpdate()">Save Status</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let rawRegistrations = [];
+
+    async function loadAllRegistrations() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'admin') {
+          window.location.href = '/login.html?role=admin';
+          return;
+        }
+        document.getElementById('sidebar-admin-name').innerText = session.user.name || 'Administrator';
+
+        const data = await API.get('/api/admin/registrations');
+        if (!data.success) return;
+
+        rawRegistrations = data.registrations;
+        filterAndRenderRegistrations();
+      } catch (err) {
+        console.error('Failed to load registrations:', err);
+        showToast('Error loading registration records.', 'error');
+      }
+    }
+
+    function filterAndRenderRegistrations() {
+      const searchTerm = document.getElementById('reg-search').value.toLowerCase().trim();
+      const statusFilter = document.getElementById('reg-status-filter').value;
+
+      const filtered = rawRegistrations.filter(r => {
+        const matchesSearch = !searchTerm ||
+          r.student_name.toLowerCase().includes(searchTerm) ||
+          r.roll_no.toLowerCase().includes(searchTerm) ||
+          r.course_code.toLowerCase().includes(searchTerm) ||
+          r.course_name.toLowerCase().includes(searchTerm);
+
+        const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+      });
+
+      document.getElementById('reg-total-count').innerText = `Total Records: ${filtered.length}`;
+      const container = document.getElementById('registrations-table-container');
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <h4 class="empty-state-title">No Registrations Found</h4>
+            <p class="empty-state-text">No registration records match the current filter criteria.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Reg ID</th>
+                <th>Student</th>
+                <th>Roll No</th>
+                <th>Branch</th>
+                <th>Course</th>
+                <th>Credits</th>
+                <th>Registration Date</th>
+                <th>Status</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      filtered.forEach(r => {
+        const statusClass = (r.status || 'registered').toLowerCase();
+        html += `
+          <tr>
+            <td>#${r.registration_id}</td>
+            <td><strong>${escapeHTML(r.student_name)}</strong></td>
+            <td><span class="badge badge-neutral">${escapeHTML(r.roll_no)}</span></td>
+            <td>${escapeHTML(r.branch || 'N/A')}</td>
+            <td>
+              <strong>${escapeHTML(r.course_code)}</strong> - ${escapeHTML(r.course_name)}
+            </td>
+            <td>${r.credits}</td>
+            <td>${escapeHTML(r.registration_date)}</td>
+            <td><span class="badge badge-${statusClass}">${escapeHTML(r.status)}</span></td>
+            <td style="text-align: right;">
+              <div style="display: inline-flex; gap: 0.35rem;">
+                <button class="btn btn-outline btn-sm" onclick="openStatusModal(${r.registration_id}, '${r.status}')" title="Change Status">
+                  Status
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteRegistration(${r.registration_id})" title="Delete Record">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function openStatusModal(regId, currentStatus) {
+      document.getElementById('status-reg-id').value = regId;
+      document.getElementById('new-status-select').value = currentStatus || 'Registered';
+      document.getElementById('status-modal').classList.add('open');
+    }
+
+    function closeStatusModal() {
+      document.getElementById('status-modal').classList.remove('open');
+    }
+
+    async function submitStatusUpdate() {
+      const regId = document.getElementById('status-reg-id').value;
+      const status = document.getElementById('new-status-select').value;
+
+      try {
+        const response = await API.patch(`/api/admin/registrations/${regId}/status`, { status });
+        showToast(response.message || 'Status updated!', 'success');
+        closeStatusModal();
+        loadAllRegistrations();
+      } catch (err) {
+        showToast(err.message || 'Failed to update status.', 'error');
+      }
+    }
+
+    async function deleteRegistration(regId) {
+      if (!confirm(`Are you sure you want to delete registration record #${regId}?`)) return;
+
+      try {
+        const response = await API.delete(`/api/admin/registrations/${regId}`);
+        showToast(response.message || 'Record deleted successfully.', 'success');
+        loadAllRegistrations();
+      } catch (err) {
+        showToast(err.message || 'Failed to delete registration.', 'error');
+      }
+    }
+
+    function resetRegFilters() {
+      document.getElementById('reg-search').value = '';
+      document.getElementById('reg-status-filter').value = 'all';
+      filterAndRenderRegistrations();
+    }
+
+    document.getElementById('reg-search').addEventListener('input', filterAndRenderRegistrations);
+    document.getElementById('reg-status-filter').addEventListener('change', filterAndRenderRegistrations);
+
+    document.addEventListener('DOMContentLoaded', loadAllRegistrations);
+  </script>
+</body>
+</html>
+

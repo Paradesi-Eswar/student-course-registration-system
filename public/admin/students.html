@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registered Students - Admin Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin/dashboard.html" class="sidebar-brand">
+          <span>🛡️</span>
+          <span>Admin Portal</span>
+        </a>
+        <span class="sidebar-badge" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">Admin</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Administration</div>
+        <a href="/admin/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/courses.html" class="sidebar-link">
+          <span class="icon">📚</span>
+          <span>Manage Courses</span>
+        </a>
+        <a href="/admin/add-course.html" class="sidebar-link">
+          <span class="icon">➕</span>
+          <span>Add New Course</span>
+        </a>
+        <a href="/admin/students.html" class="sidebar-link active">
+          <span class="icon">👨‍🎓</span>
+          <span>Registered Students</span>
+        </a>
+        <a href="/admin/registrations.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>All Registrations</span>
+        </a>
+        <a href="/admin/course-students.html" class="sidebar-link">
+          <span class="icon">👥</span>
+          <span>Course Roster</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-admin-name">Administrator</span>
+          <span class="user-snippet-role">Super Admin</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Student Directory</h1>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <div class="search-input-wrapper">
+              <input type="text" id="student-search-input" class="form-control" placeholder="🔍 Search student name, roll number, email...">
+            </div>
+            <div class="filter-item">
+              <select id="student-branch-filter" class="form-select">
+                <option value="all">All Branches</option>
+              </select>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="resetStudentFilter()">Reset</button>
+          </div>
+          <div>
+            <span id="students-count-badge" style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">
+              Total Students: 0
+            </span>
+          </div>
+        </div>
+
+        <!-- Students Table Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span>👨‍🎓</span> Registered Students Roster</h3>
+          </div>
+
+          <div id="students-table-container">
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              Loading student roster...
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Student Registration Records Modal -->
+  <div class="modal-backdrop" id="student-details-modal">
+    <div class="modal-content" style="max-width: 750px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-student-title">Student Registration Details</h3>
+        <button class="modal-close" onclick="closeStudentModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-student-body">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeStudentModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let rawStudents = [];
+
+    async function loadStudents() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'admin') {
+          window.location.href = '/login.html?role=admin';
+          return;
+        }
+        document.getElementById('sidebar-admin-name').innerText = session.user.name || 'Administrator';
+
+        const data = await API.get('/api/admin/students');
+        if (!data.success) return;
+
+        rawStudents = data.students;
+
+        // Populate branches
+        const branchSelect = document.getElementById('student-branch-filter');
+        const uniqueBranches = [...new Set(rawStudents.map(s => s.branch).filter(Boolean))].sort();
+
+        if (branchSelect.options.length === 1) {
+          uniqueBranches.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b;
+            opt.innerText = b;
+            branchSelect.appendChild(opt);
+          });
+        }
+
+        filterAndRenderStudents();
+      } catch (err) {
+        console.error('Failed to load students:', err);
+        showToast('Error loading student records.', 'error');
+      }
+    }
+
+    function filterAndRenderStudents() {
+      const searchTerm = document.getElementById('student-search-input').value.toLowerCase().trim();
+      const selectedBranch = document.getElementById('student-branch-filter').value;
+
+      const filtered = rawStudents.filter(s => {
+        const matchesSearch = !searchTerm ||
+          s.name.toLowerCase().includes(searchTerm) ||
+          s.roll_no.toLowerCase().includes(searchTerm) ||
+          s.email.toLowerCase().includes(searchTerm);
+
+        const matchesBranch = selectedBranch === 'all' || s.branch === selectedBranch;
+
+        return matchesSearch && matchesBranch;
+      });
+
+      document.getElementById('students-count-badge').innerText = `Total Students: ${filtered.length}`;
+      const container = document.getElementById('students-table-container');
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">👨‍🎓</div>
+            <h4 class="empty-state-title">No Students Found</h4>
+            <p class="empty-state-text">No student accounts matched your query.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Roll Number</th>
+                <th>Student Name</th>
+                <th>Branch</th>
+                <th>Email</th>
+                <th>Registered Courses</th>
+                <th>Total Credits</th>
+                <th style="text-align: right;">Registration Details</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      filtered.forEach(s => {
+        html += `
+          <tr>
+            <td>#${s.student_id}</td>
+            <td><strong>${escapeHTML(s.roll_no)}</strong></td>
+            <td>
+              <div style="font-weight: 600;">${escapeHTML(s.name)}</div>
+            </td>
+            <td><span class="badge badge-neutral">${escapeHTML(s.branch || 'N/A')}</span></td>
+            <td><a href="mailto:${escapeHTML(s.email)}">${escapeHTML(s.email)}</a></td>
+            <td>
+              <span class="badge ${s.registered_courses_count > 0 ? 'badge-registered' : 'badge-neutral'}">
+                📚 ${s.registered_courses_count} Courses
+              </span>
+            </td>
+            <td><strong>${s.total_credits}</strong> Credits</td>
+            <td style="text-align: right;">
+              <button class="btn btn-primary btn-sm" onclick="viewStudentRegistrations(${s.student_id})">
+                View Records
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    async function viewStudentRegistrations(studentId) {
+      try {
+        const data = await API.get(`/api/admin/students/${studentId}/registrations`);
+        if (!data.success) return;
+
+        const s = data.student;
+        const registrations = data.registrations;
+
+        document.getElementById('modal-student-title').innerText = `${s.name} (${s.roll_no}) - Registration Records`;
+
+        let bodyHtml = `
+          <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1.25rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Branch / Dept</div>
+              <div style="font-weight: 600;">${escapeHTML(s.branch || 'N/A')}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Email</div>
+              <div style="font-weight: 600;">${escapeHTML(s.email)}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Total Registrations</div>
+              <div style="font-weight: 600; color: var(--primary);">${registrations.length} Course(s)</div>
+            </div>
+          </div>
+        `;
+
+        if (registrations.length === 0) {
+          bodyHtml += `
+            <div class="empty-state" style="padding: 2rem 1rem;">
+              <div class="empty-state-icon">📋</div>
+              <h4 class="empty-state-title">No Registered Courses</h4>
+              <p class="empty-state-text">This student has not yet registered for any semester courses.</p>
+            </div>
+          `;
+        } else {
+          bodyHtml += `
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Reg ID</th>
+                    <th>Course Code</th>
+                    <th>Course Name</th>
+                    <th>Credits</th>
+                    <th>Department</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
+          registrations.forEach(r => {
+            const statusClass = (r.status || 'registered').toLowerCase();
+            bodyHtml += `
+              <tr>
+                <td>#${r.registration_id}</td>
+                <td><strong>${escapeHTML(r.course_code)}</strong></td>
+                <td>${escapeHTML(r.course_name)}</td>
+                <td>${r.credits}</td>
+                <td>${escapeHTML(r.department)}</td>
+                <td>${escapeHTML(r.registration_date)}</td>
+                <td><span class="badge badge-${statusClass}">${escapeHTML(r.status)}</span></td>
+              </tr>
+            `;
+          });
+
+          bodyHtml += `
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        document.getElementById('modal-student-body').innerHTML = bodyHtml;
+        document.getElementById('student-details-modal').classList.add('open');
+      } catch (err) {
+        showToast(err.message || 'Error retrieving student registrations.', 'error');
+      }
+    }
+
+    function closeStudentModal() {
+      document.getElementById('student-details-modal').classList.remove('open');
+    }
+
+    function resetStudentFilter() {
+      document.getElementById('student-search-input').value = '';
+      document.getElementById('student-branch-filter').value = 'all';
+      filterAndRenderStudents();
+    }
+
+    document.getElementById('student-search-input').addEventListener('input', filterAndRenderStudents);
+    document.getElementById('student-branch-filter').addEventListener('change', filterAndRenderStudents);
+
+    document.addEventListener('DOMContentLoaded', loadStudents);
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,28 @@
+{
+  "name": "student-course-registration-system",
+  "version": "1.0.0",
+  "description": "Full-Stack Student Course Registration System built with HTML5, CSS3, JavaScript, Node.js, Express, and MySQL.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "init-db": "node scripts/init-db.js"
+  },
+  "keywords": [
+    "student",
+    "course-registration",
+    "express",
+    "mysql",
+    "full-stack"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "mysql2": "^3.9.7"
+  }
+}
+

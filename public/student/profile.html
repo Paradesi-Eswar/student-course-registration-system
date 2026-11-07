@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Profile - Student Course Registration System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/student/dashboard.html" class="sidebar-brand">
+          <span>🎓</span>
+          <span>Student Portal</span>
+        </a>
+        <span class="sidebar-badge">Student</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigation</div>
+        <a href="/student/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/student/courses.html" class="sidebar-link">
+          <span class="icon">📖</span>
+          <span>Available Courses</span>
+        </a>
+        <a href="/student/register-course.html" class="sidebar-link">
+          <span class="icon">✍️</span>
+          <span>Course Registration</span>
+        </a>
+        <a href="/student/my-courses.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>My Registrations</span>
+        </a>
+        <a href="/student/profile.html" class="sidebar-link active">
+          <span class="icon">👤</span>
+          <span>Student Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-user-name">Student</span>
+          <span class="user-snippet-role" id="sidebar-user-roll">Roll No</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Student Profile</h1>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <div style="max-width: 900px; margin: 0 auto;">
+          <!-- Profile Header Card -->
+          <div class="card" style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+            <div style="width: 80px; height: 80px; border-radius: var(--radius-full); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 800; border: 2px solid var(--primary-subtle);" id="profile-avatar">
+              ?
+            </div>
+            <div style="flex: 1;">
+              <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;" id="profile-name">
+                Loading Name...
+              </h2>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                <span class="badge badge-neutral" id="profile-roll-badge">Roll: -</span>
+                <span class="badge badge-neutral" id="profile-branch-badge">Branch: -</span>
+                <span class="badge badge-approved">Active Student</span>
+              </div>
+            </div>
+            <div>
+              <a href="/student/my-courses.html" class="btn btn-primary btn-sm">View Enrolled Courses</a>
+            </div>
+          </div>
+
+          <!-- Academic & Personal Details Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <!-- Personal Info Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title"><span>👤</span> Personal Information</h3>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                  <div class="form-label" style="margin-bottom: 2px;">Full Name</div>
+                  <div style="font-weight: 600;" id="info-name">-</div>
+                </div>
+                <div>
+                  <div class="form-label" style="margin-bottom: 2px;">Institutional Roll Number</div>
+                  <div style="font-weight: 600; color: var(--primary);" id="info-roll">-</div>
+                </div>
+                <div>
+                  <div class="form-label" style="margin-bottom: 2px;">Registered Email Address</div>
+                  <div style="font-weight: 600;" id="info-email">-</div>
+                </div>
+                <div>
+                  <div class="form-label" style="margin-bottom: 2px;">Department / Academic Branch</div>
+                  <div style="font-weight: 600;" id="info-branch">-</div>
+                </div>
+                <div>
+                  <div class="form-label" style="margin-bottom: 2px;">Database Student ID</div>
+                  <div style="font-weight: 600;" id="info-id">-</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Academic Enrollment Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title"><span>🎓</span> Academic Registration Summary</h3>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+                  <div style="font-size: 2.2rem; font-weight: 800; color: var(--primary);" id="summary-courses">0</div>
+                  <div style="color: var(--text-muted); font-size: 0.88rem; font-weight: 500;">Registered Courses This Term</div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+                  <div style="font-size: 2.2rem; font-weight: 800; color: var(--success);" id="summary-credits">0</div>
+                  <div style="color: var(--text-muted); font-size: 0.88rem; font-weight: 500;">Total Enrolled Credits</div>
+                </div>
+
+                <div class="alert alert-info" style="margin-bottom: 0; font-size: 0.85rem;">
+                  ℹ️ Only administrators can alter core student profile properties. Contact academic administration for changes.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    async function loadProfile() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'student') {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        document.getElementById('sidebar-user-name').innerText = session.user.name;
+        document.getElementById('sidebar-user-roll').innerText = session.user.roll_no;
+
+        const data = await API.get('/api/student/profile');
+        if (!data.success) return;
+
+        const s = data.student;
+        document.getElementById('profile-name').innerText = s.name;
+        document.getElementById('profile-roll-badge').innerText = `Roll: ${s.roll_no}`;
+        document.getElementById('profile-branch-badge').innerText = s.branch || 'General';
+
+        // Avatar Initials
+        const initials = s.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        document.getElementById('profile-avatar').innerText = initials || 'ST';
+
+        document.getElementById('info-name').innerText = s.name;
+        document.getElementById('info-roll').innerText = s.roll_no;
+        document.getElementById('info-email').innerText = s.email;
+        document.getElementById('info-branch').innerText = s.branch || 'Not Specified';
+        document.getElementById('info-id').innerText = `#STU-${s.student_id}`;
+
+        document.getElementById('summary-courses').innerText = s.total_courses;
+        document.getElementById('summary-credits').innerText = s.total_credits;
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+        showToast('Error loading profile details.', 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>

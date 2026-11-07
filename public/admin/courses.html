@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Courses - Admin Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin/dashboard.html" class="sidebar-brand">
+          <span>🛡️</span>
+          <span>Admin Portal</span>
+        </a>
+        <span class="sidebar-badge" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">Admin</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Administration</div>
+        <a href="/admin/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/courses.html" class="sidebar-link active">
+          <span class="icon">📚</span>
+          <span>Manage Courses</span>
+        </a>
+        <a href="/admin/add-course.html" class="sidebar-link">
+          <span class="icon">➕</span>
+          <span>Add New Course</span>
+        </a>
+        <a href="/admin/students.html" class="sidebar-link">
+          <span class="icon">👨‍🎓</span>
+          <span>Registered Students</span>
+        </a>
+        <a href="/admin/registrations.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>All Registrations</span>
+        </a>
+        <a href="/admin/course-students.html" class="sidebar-link">
+          <span class="icon">👥</span>
+          <span>Course Roster</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-admin-name">Administrator</span>
+          <span class="user-snippet-role">Super Admin</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Manage Course Catalog</h1>
+        </div>
+        <div class="topbar-right">
+          <a href="/admin/add-course.html" class="btn btn-primary btn-sm">+ Add New Course</a>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <div class="search-input-wrapper">
+              <input type="text" id="admin-course-search" class="form-control" placeholder="🔍 Search course code, title, department...">
+            </div>
+            <div class="filter-item">
+              <select id="admin-dept-filter" class="form-select">
+                <option value="all">All Departments</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <select id="admin-sem-filter" class="form-select">
+                <option value="all">All Semesters</option>
+              </select>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="resetCourseFilters()">Reset</button>
+          </div>
+          <div>
+            <span id="courses-total-badge" style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">
+              Total Courses: 0
+            </span>
+          </div>
+        </div>
+
+        <!-- Courses Table Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span>📚</span> Courses List</h3>
+            <a href="/admin/add-course.html" class="btn btn-primary btn-sm">+ Add Course</a>
+          </div>
+
+          <div id="admin-courses-table-container">
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              Loading course catalog...
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Edit Course Modal -->
+  <div class="modal-backdrop" id="edit-course-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Course Details</h3>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form id="edit-course-form">
+        <div class="modal-body">
+          <input type="hidden" id="edit-course-id">
+          <div id="edit-alert" class="alert alert-danger" style="display: none;"></div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit-code">Course Code <span class="required">*</span></label>
+              <input type="text" id="edit-code" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-credits">Credits <span class="required">*</span></label>
+              <input type="number" id="edit-credits" class="form-control" min="1" max="10" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-name">Course Name <span class="required">*</span></label>
+            <input type="text" id="edit-name" class="form-control" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit-department">Department <span class="required">*</span></label>
+              <input type="text" id="edit-department" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-semester">Semester <span class="required">*</span></label>
+              <input type="number" id="edit-semester" class="form-control" min="1" max="12" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-desc">Description & Syllabus</label>
+            <textarea id="edit-desc" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-edit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let rawCourses = [];
+
+    async function loadAdminCourses() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'admin') {
+          window.location.href = '/login.html?role=admin';
+          return;
+        }
+
+        document.getElementById('sidebar-admin-name').innerText = session.user.name || 'Administrator';
+
+        const data = await API.get('/api/admin/courses');
+        if (!data.success) return;
+
+        rawCourses = data.courses;
+
+        // Populate departments & semesters in filter
+        const deptSelect = document.getElementById('admin-dept-filter');
+        const semSelect = document.getElementById('admin-sem-filter');
+
+        const uniqueDepts = [...new Set(rawCourses.map(c => c.department))].sort();
+        const uniqueSems = [...new Set(rawCourses.map(c => c.semester))].sort((a, b) => a - b);
+
+        if (deptSelect.options.length === 1) {
+          uniqueDepts.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.innerText = d;
+            deptSelect.appendChild(opt);
+          });
+        }
+
+        if (semSelect.options.length === 1) {
+          uniqueSems.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.innerText = `Semester ${s}`;
+            semSelect.appendChild(opt);
+          });
+        }
+
+        filterAndRenderCourses();
+      } catch (err) {
+        console.error('Failed to load admin courses:', err);
+        showToast('Error loading course catalog.', 'error');
+      }
+    }
+
+    function filterAndRenderCourses() {
+      const searchTerm = document.getElementById('admin-course-search').value.toLowerCase().trim();
+      const selectedDept = document.getElementById('admin-dept-filter').value;
+      const selectedSem = document.getElementById('admin-sem-filter').value;
+
+      const filtered = rawCourses.filter(c => {
+        const matchesSearch = !searchTerm || 
+          c.course_code.toLowerCase().includes(searchTerm) || 
+          c.course_name.toLowerCase().includes(searchTerm) || 
+          c.department.toLowerCase().includes(searchTerm);
+
+        const matchesDept = selectedDept === 'all' || c.department === selectedDept;
+        const matchesSem = selectedSem === 'all' || String(c.semester) === selectedSem;
+
+        return matchesSearch && matchesDept && matchesSem;
+      });
+
+      document.getElementById('courses-total-badge').innerText = `Total Courses: ${filtered.length}`;
+      const container = document.getElementById('admin-courses-table-container');
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📚</div>
+            <h4 class="empty-state-title">No Courses Match Filter</h4>
+            <p class="empty-state-text">No courses match the current search or filters. Click reset to see all courses.</p>
+            <button class="btn btn-secondary" onclick="resetCourseFilters()">Reset Filters</button>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Credits</th>
+                <th>Department</th>
+                <th>Semester</th>
+                <th>Enrolled Students</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      filtered.forEach(c => {
+        html += `
+          <tr>
+            <td>#${c.course_id}</td>
+            <td><span class="course-code-pill">${escapeHTML(c.course_code)}</span></td>
+            <td>
+              <div style="font-weight: 600;">${escapeHTML(c.course_name)}</div>
+              ${c.description ? `<div style="font-size: 0.8rem; color: var(--text-muted); max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(c.description)}</div>` : ''}
+            </td>
+            <td><span class="badge badge-neutral">${c.credits} Credits</span></td>
+            <td>${escapeHTML(c.department)}</td>
+            <td>Sem ${c.semester}</td>
+            <td>
+              <a href="/admin/course-students.html?course_id=${c.course_id}" class="badge ${c.registered_students_count > 0 ? 'badge-registered' : 'badge-neutral'}" title="View registered students">
+                👥 ${c.registered_students_count} Students
+              </a>
+            </td>
+            <td style="text-align: right;">
+              <div style="display: inline-flex; gap: 0.4rem;">
+                <button class="btn btn-outline btn-sm" onclick="openEditModal(${c.course_id})" title="Edit course">
+                  ✏️ Edit
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCourse(${c.course_id}, '${escapeHTML(c.course_code)}', ${c.registered_students_count})" title="Delete course">
+                  🗑️ Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function openEditModal(courseId) {
+      const course = rawCourses.find(c => c.course_id === courseId);
+      if (!course) return;
+
+      document.getElementById('edit-course-id').value = course.course_id;
+      document.getElementById('edit-code').value = course.course_code;
+      document.getElementById('edit-name').value = course.course_name;
+      document.getElementById('edit-credits').value = course.credits;
+      document.getElementById('edit-department').value = course.department;
+      document.getElementById('edit-semester').value = course.semester;
+      document.getElementById('edit-desc').value = course.description || '';
+      document.getElementById('edit-alert').style.display = 'none';
+
+      document.getElementById('edit-course-modal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-course-modal').classList.remove('open');
+    }
+
+    // Submit Edit Form Handler
+    document.getElementById('edit-course-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const courseId = document.getElementById('edit-course-id').value;
+      const alertBox = document.getElementById('edit-alert');
+      const submitBtn = document.getElementById('btn-save-edit');
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+
+      const payload = {
+        course_code: document.getElementById('edit-code').value.trim(),
+        course_name: document.getElementById('edit-name').value.trim(),
+        credits: parseInt(document.getElementById('edit-credits').value, 10),
+        department: document.getElementById('edit-department').value.trim(),
+        semester: parseInt(document.getElementById('edit-semester').value, 10),
+        description: document.getElementById('edit-desc').value.trim()
+      };
+
+      try {
+        const response = await API.put(`/api/admin/courses/${courseId}`, payload);
+        showToast(response.message || 'Course updated successfully!', 'success');
+        closeEditModal();
+        loadAdminCourses();
+      } catch (err) {
+        alertBox.innerText = err.message || 'Failed to update course.';
+        alertBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    async function deleteCourse(courseId, courseCode, registeredCount) {
+      let confirmMsg = `Are you sure you want to delete course ${courseCode}?`;
+      if (registeredCount > 0) {
+        confirmMsg += `\n\nWARNING: There are ${registeredCount} student registration(s) associated with this course. Foreign key cascading will remove those registration records as well.`;
+      }
+
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const response = await API.delete(`/api/admin/courses/${courseId}`);
+        showToast(response.message || 'Course deleted successfully.', 'success');
+        loadAdminCourses();
+      } catch (err) {
+        showToast(err.message || 'Failed to delete course.', 'error');
+      }
+    }
+
+    function resetCourseFilters() {
+      document.getElementById('admin-course-search').value = '';
+      document.getElementById('admin-dept-filter').value = 'all';
+      document.getElementById('admin-sem-filter').value = 'all';
+      filterAndRenderCourses();
+    }
+
+    document.getElementById('admin-course-search').addEventListener('input', filterAndRenderCourses);
+    document.getElementById('admin-dept-filter').addEventListener('change', filterAndRenderCourses);
+    document.getElementById('admin-sem-filter').addEventListener('change', filterAndRenderCourses);
+
+    document.addEventListener('DOMContentLoaded', loadAdminCourses);
+  </script>
+</body>
+</html>
+

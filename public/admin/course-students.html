@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Enrollment Roster - Admin Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    @media print {
+      .sidebar, .topbar, .filter-bar, .no-print {
+        display: none !important;
+      }
+      .main-wrapper {
+        margin-left: 0 !important;
+      }
+      .card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar no-print">
+      <div class="sidebar-header">
+        <a href="/admin/dashboard.html" class="sidebar-brand">
+          <span>🛡️</span>
+          <span>Admin Portal</span>
+        </a>
+        <span class="sidebar-badge" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">Admin</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Administration</div>
+        <a href="/admin/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/courses.html" class="sidebar-link">
+          <span class="icon">📚</span>
+          <span>Manage Courses</span>
+        </a>
+        <a href="/admin/add-course.html" class="sidebar-link">
+          <span class="icon">➕</span>
+          <span>Add New Course</span>
+        </a>
+        <a href="/admin/students.html" class="sidebar-link">
+          <span class="icon">👨‍🎓</span>
+          <span>Registered Students</span>
+        </a>
+        <a href="/admin/registrations.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>All Registrations</span>
+        </a>
+        <a href="/admin/course-students.html" class="sidebar-link active">
+          <span class="icon">👥</span>
+          <span>Course Roster</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-admin-name">Administrator</span>
+          <span class="user-snippet-role">Super Admin</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar no-print">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Course Student Roster</h1>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print Roster</button>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Course Selection Bar -->
+        <div class="filter-bar no-print">
+          <div class="filter-group">
+            <label class="form-label" for="select-course" style="margin-bottom: 0; font-weight: 700;">Select Course:</label>
+            <div class="filter-item" style="min-width: 300px;">
+              <select id="select-course" class="form-select">
+                <option value="">-- Choose a course to view registered students --</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <a href="/admin/courses.html" class="btn btn-outline btn-sm">← Course Catalog</a>
+          </div>
+        </div>
+
+        <!-- Course Header Info Card -->
+        <div class="card" id="course-header-card" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.35rem;">
+                <span class="course-code-pill" id="roster-course-code">CS101</span>
+                <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0;" id="roster-course-name">
+                  Course Title
+                </h2>
+              </div>
+              <div style="display: flex; gap: 0.75rem; color: var(--text-muted); font-size: 0.88rem;">
+                <span id="roster-dept">Department: Computer Science</span>
+                <span>•</span>
+                <span id="roster-sem">Semester: 1</span>
+                <span>•</span>
+                <span id="roster-credits">Credits: 4</span>
+              </div>
+            </div>
+
+            <div style="text-align: right;">
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Enrolled Students</div>
+              <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary);" id="roster-student-count">
+                0
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students Roster Card -->
+        <div class="card">
+          <div class="card-header no-print">
+            <h3 class="card-title"><span>👥</span> Enrolled Students Roster</h3>
+          </div>
+
+          <div id="roster-table-container">
+            <div class="empty-state">
+              <div class="empty-state-icon">📖</div>
+              <h4 class="empty-state-title">Select a Course</h4>
+              <p class="empty-state-text">Please choose a course from the dropdown above to view its registered students.</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let coursesList = [];
+
+    async function initRosterPage() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'admin') {
+          window.location.href = '/login.html?role=admin';
+          return;
+        }
+        document.getElementById('sidebar-admin-name').innerText = session.user.name || 'Administrator';
+
+        // Load all courses to populate select dropdown
+        const coursesData = await API.get('/api/admin/courses');
+        if (!coursesData.success) return;
+
+        coursesList = coursesData.courses;
+        const select = document.getElementById('select-course');
+
+        coursesList.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.course_id;
+          opt.innerText = `${c.course_code} - ${c.course_name} (${c.registered_students_count} students)`;
+          select.appendChild(opt);
+        });
+
+        // Check if query param ?course_id=... is provided
+        const urlParams = new URLSearchParams(window.location.search);
+        const presetCourseId = urlParams.get('course_id');
+        if (presetCourseId) {
+          select.value = presetCourseId;
+          loadCourseRoster(presetCourseId);
+        }
+
+        select.addEventListener('change', () => {
+          if (select.value) {
+            loadCourseRoster(select.value);
+          } else {
+            document.getElementById('course-header-card').style.display = 'none';
+            document.getElementById('roster-table-container').innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon">📖</div>
+                <h4 class="empty-state-title">Select a Course</h4>
+                <p class="empty-state-text">Please choose a course from the dropdown above to view its registered students.</p>
+              </div>
+            `;
+          }
+        });
+      } catch (err) {
+        console.error('Failed to initialize roster page:', err);
+        showToast('Error initializing roster page.', 'error');
+      }
+    }
+
+    async function loadCourseRoster(courseId) {
+      try {
+        const container = document.getElementById('roster-table-container');
+        container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading course roster...</div>`;
+
+        const data = await API.get(`/api/admin/courses/${courseId}/students`);
+        if (!data.success) return;
+
+        const c = data.course;
+        const students = data.students;
+
+        // Update header card
+        document.getElementById('course-header-card').style.display = 'block';
+        document.getElementById('roster-course-code').innerText = c.course_code;
+        document.getElementById('roster-course-name').innerText = c.course_name;
+        document.getElementById('roster-dept').innerText = `Department: ${c.department}`;
+        document.getElementById('roster-sem').innerText = `Semester: ${c.semester}`;
+        document.getElementById('roster-credits').innerText = `Credits: ${c.credits}`;
+        document.getElementById('roster-student-count').innerText = `${students.length} Student${students.length === 1 ? '' : 's'}`;
+
+        if (students.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">👥</div>
+              <h4 class="empty-state-title">No Students Registered</h4>
+              <p class="empty-state-text">No students have enrolled in <strong>${escapeHTML(c.course_code)} - ${escapeHTML(c.course_name)}</strong> yet.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = `
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Roll Number</th>
+                  <th>Student Name</th>
+                  <th>Branch</th>
+                  <th>Email</th>
+                  <th>Registration Date</th>
+                  <th>Registration Status</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        students.forEach((s, index) => {
+          const statusClass = (s.status || 'registered').toLowerCase();
+          html += `
+            <tr>
+              <td>${index + 1}</td>
+              <td><strong>${escapeHTML(s.roll_no)}</strong></td>
+              <td><div style="font-weight: 600;">${escapeHTML(s.name)}</div></td>
+              <td><span class="badge badge-neutral">${escapeHTML(s.branch || 'N/A')}</span></td>
+              <td><a href="mailto:${escapeHTML(s.email)}">${escapeHTML(s.email)}</a></td>
+              <td>${escapeHTML(s.registration_date)}</td>
+              <td><span class="badge badge-${statusClass}">${escapeHTML(s.status)}</span></td>
+            </tr>
+          `;
+        });
+
+        html += `
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        container.innerHTML = html;
+      } catch (err) {
+        console.error('Failed to load roster:', err);
+        showToast('Error loading roster for this course.', 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initRosterPage);
+  </script>
+</body>
+</html>
+

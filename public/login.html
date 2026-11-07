@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Student Course Registration System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="public-header">
+    <nav class="public-navbar">
+      <a href="/" class="brand-logo">
+        <span class="brand-icon">🎓</span>
+        <span>CourseReg Portal</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/login.html" class="active">Login</a></li>
+        <li><a href="/register.html">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Login Form Wrapper -->
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1 class="auth-title" id="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle" id="auth-subtitle">Log in to manage your course registrations</p>
+      </div>
+
+      <!-- Role Tabs -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab-btn active" id="tab-student" onclick="switchRole('student')">👨‍🎓 Student Portal</button>
+        <button type="button" class="auth-tab-btn" id="tab-admin" onclick="switchRole('admin')">🛡️ Administrator</button>
+      </div>
+
+      <!-- Alert Message Box -->
+      <div id="login-alert" class="alert alert-danger" style="display: none;"></div>
+
+      <!-- Student Login Form -->
+      <form id="student-login-form">
+        <div class="form-group">
+          <label class="form-label" for="student-identifier">Roll Number or Email <span class="required">*</span></label>
+          <input type="text" id="student-identifier" class="form-control" placeholder="e.g. 21CS001 or john@college.edu" required autocomplete="username">
+          <span class="form-hint">Enter your institutional roll number or registered email.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="student-password">Password <span class="required">*</span></label>
+          <input type="password" id="student-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-student-submit">
+          Log In as Student
+        </button>
+      </form>
+
+      <!-- Administrator Login Form -->
+      <form id="admin-login-form" style="display: none;">
+        <div class="form-group">
+          <label class="form-label" for="admin-username">Admin Username <span class="required">*</span></label>
+          <input type="text" id="admin-username" class="form-control" placeholder="e.g. admin" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="admin-password">Password <span class="required">*</span></label>
+          <input type="password" id="admin-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-admin-submit">
+          Log In as Administrator
+        </button>
+      </form>
+
+      <!-- Quick Demo Credentials Box -->
+      <div style="margin-top: 1.5rem; padding: 0.85rem; background: #f8fafc; border-radius: var(--radius-md); border: 1px dashed var(--border-color); font-size: 0.82rem;">
+        <div style="font-weight: 600; margin-bottom: 0.35rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+          <span>Demo Credentials:</span>
+          <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 6px; font-size: 0.72rem;" onclick="fillDemoCredentials()">Auto-fill</button>
+        </div>
+        <div id="demo-student-info">
+          Student: <strong>21CS001</strong> / <strong>student123</strong>
+        </div>
+        <div id="demo-admin-info" style="display: none;">
+          Admin: <strong>admin</strong> / <strong>admin123</strong>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.25rem; text-align: center; font-size: 0.88rem; color: var(--text-muted);">
+        Don't have a student account? <a href="/register.html" style="font-weight: 600;">Register here</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let currentRole = 'student';
+
+    function switchRole(role) {
+      currentRole = role;
+      const tabStudent = document.getElementById('tab-student');
+      const tabAdmin = document.getElementById('tab-admin');
+      const studentForm = document.getElementById('student-login-form');
+      const adminForm = document.getElementById('admin-login-form');
+      const authTitle = document.getElementById('auth-title');
+      const authSubtitle = document.getElementById('auth-subtitle');
+      const demoStudentInfo = document.getElementById('demo-student-info');
+      const demoAdminInfo = document.getElementById('demo-admin-info');
+      const alertBox = document.getElementById('login-alert');
+
+      alertBox.style.display = 'none';
+
+      if (role === 'admin') {
+        tabAdmin.classList.add('active');
+        tabStudent.classList.remove('active');
+        studentForm.style.display = 'none';
+        adminForm.style.display = 'block';
+        demoStudentInfo.style.display = 'none';
+        demoAdminInfo.style.display = 'block';
+        authTitle.innerText = 'Admin Portal';
+        authSubtitle.innerText = 'Sign in with administrator credentials';
+      } else {
+        tabStudent.classList.add('active');
+        tabAdmin.classList.remove('active');
+        studentForm.style.display = 'block';
+        adminForm.style.display = 'none';
+        demoStudentInfo.style.display = 'block';
+        demoAdminInfo.style.display = 'none';
+        authTitle.innerText = 'Student Login';
+        authSubtitle.innerText = 'Log in to manage your course registrations';
+      }
+    }
+
+    function fillDemoCredentials() {
+      if (currentRole === 'student') {
+        document.getElementById('student-identifier').value = '21CS001';
+        document.getElementById('student-password').value = 'student123';
+      } else {
+        document.getElementById('admin-username').value = 'admin';
+        document.getElementById('admin-password').value = 'admin123';
+      }
+    }
+
+    // Check query params e.g. /login.html?role=admin
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('role') === 'admin') {
+      switchRole('admin');
+    }
+
+    // Student Login Submit Handler
+    document.getElementById('student-login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('login-alert');
+      const submitBtn = document.getElementById('btn-student-submit');
+      const roll_no = document.getElementById('student-identifier').value.trim();
+      const password = document.getElementById('student-password').value;
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Verifying...';
+
+      try {
+        const response = await API.post('/api/auth/student/login', { roll_no, password });
+        showToast(response.message || 'Login successful!', 'success');
+        setTimeout(() => {
+          window.location.href = response.redirectUrl || '/student/dashboard.html';
+        }, 500);
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.innerText = err.message || 'Login failed. Please check your credentials.';
+        alertBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Log In as Student';
+      }
+    });
+
+    // Admin Login Submit Handler
+    document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('login-alert');
+      const submitBtn = document.getElementById('btn-admin-submit');
+      const username = document.getElementById('admin-username').value.trim();
+      const password = document.getElementById('admin-password').value;
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Verifying...';
+
+      try {
+        const response = await API.post('/api/auth/admin/login', { username, password });
+        showToast(response.message || 'Admin login successful!', 'success');
+        setTimeout(() => {
+          window.location.href = response.redirectUrl || '/admin/dashboard.html';
+        }, 500);
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.innerText = err.message || 'Invalid administrator credentials.';
+        alertBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Log In as Administrator';
+      }
+    });
+
+    // Check if already logged in
+    API.getSession().then(session => {
+      if (session.authenticated && session.user) {
+        if (session.user.role === 'admin') {
+          window.location.href = '/admin/dashboard.html';
+        } else {
+          window.location.href = '/student/dashboard.html';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Course - Admin Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin/dashboard.html" class="sidebar-brand">
+          <span>🛡️</span>
+          <span>Admin Portal</span>
+        </a>
+        <span class="sidebar-badge" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">Admin</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Administration</div>
+        <a href="/admin/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/courses.html" class="sidebar-link active">
+          <span class="icon">📚</span>
+          <span>Manage Courses</span>
+        </a>
+        <a href="/admin/add-course.html" class="sidebar-link">
+          <span class="icon">➕</span>
+          <span>Add New Course</span>
+        </a>
+        <a href="/admin/students.html" class="sidebar-link">
+          <span class="icon">👨‍🎓</span>
+          <span>Registered Students</span>
+        </a>
+        <a href="/admin/registrations.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>All Registrations</span>
+        </a>
+        <a href="/admin/course-students.html" class="sidebar-link">
+          <span class="icon">👥</span>
+          <span>Course Roster</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-admin-name">Administrator</span>
+          <span class="user-snippet-role">Super Admin</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Edit Course</h1>
+        </div>
+        <div class="topbar-right">
+          <a href="/admin/courses.html" class="btn btn-secondary btn-sm">← Back to Courses</a>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <div style="max-width: 720px; margin: 0 auto;">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><span>✏️</span> Modify Course Details</h2>
+            </div>
+
+            <!-- Alert box -->
+            <div id="edit-course-alert" class="alert alert-danger" style="display: none;"></div>
+
+            <form id="edit-course-form">
+              <input type="hidden" id="course_id">
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="course_code">Course Code <span class="required">*</span></label>
+                  <input type="text" id="course_code" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="credits">Academic Credits <span class="required">*</span></label>
+                  <input type="number" id="credits" class="form-control" min="1" max="10" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="course_name">Course Name / Title <span class="required">*</span></label>
+                <input type="text" id="course_name" class="form-control" required>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="department">Academic Department <span class="required">*</span></label>
+                  <input type="text" id="department" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="semester">Semester Number <span class="required">*</span></label>
+                  <input type="number" id="semester" class="form-control" min="1" max="12" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="description">Course Description & Syllabus</label>
+                <textarea id="description" class="form-control" rows="4"></textarea>
+              </div>
+
+              <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <a href="/admin/courses.html" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" id="btn-update-course">Update Course</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let courseId = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = await API.getSession();
+      if (!session.authenticated || session.user.role !== 'admin') {
+        window.location.href = '/login.html?role=admin';
+        return;
+      }
+      document.getElementById('sidebar-admin-name').innerText = session.user.name || 'Administrator';
+
+      const urlParams = new URLSearchParams(window.location.search);
+      courseId = urlParams.get('id');
+
+      if (!courseId) {
+        showToast('No course ID specified.', 'error');
+        window.location.href = '/admin/courses.html';
+        return;
+      }
+
+      try {
+        const data = await API.get(`/api/admin/courses/${courseId}`);
+        if (!data.success || !data.course) {
+          throw new Error('Course not found');
+        }
+
+        const c = data.course;
+        document.getElementById('course_id').value = c.course_id;
+        document.getElementById('course_code').value = c.course_code;
+        document.getElementById('course_name').value = c.course_name;
+        document.getElementById('credits').value = c.credits;
+        document.getElementById('department').value = c.department;
+        document.getElementById('semester').value = c.semester;
+        document.getElementById('description').value = c.description || '';
+      } catch (err) {
+        showToast(err.message || 'Error loading course details.', 'error');
+        setTimeout(() => { window.location.href = '/admin/courses.html'; }, 1000);
+      }
+    });
+
+    document.getElementById('edit-course-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('edit-course-alert');
+      const submitBtn = document.getElementById('btn-update-course');
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Saving Changes...';
+
+      const payload = {
+        course_code: document.getElementById('course_code').value.trim(),
+        course_name: document.getElementById('course_name').value.trim(),
+        credits: parseInt(document.getElementById('credits').value, 10),
+        department: document.getElementById('department').value.trim(),
+        semester: parseInt(document.getElementById('semester').value, 10),
+        description: document.getElementById('description').value.trim()
+      };
+
+      try {
+        const response = await API.put(`/api/admin/courses/${courseId}`, payload);
+        showToast(response.message || 'Course updated successfully!', 'success');
+        setTimeout(() => {
+          window.location.href = '/admin/courses.html';
+        }, 800);
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.innerText = err.message || 'Failed to update course.';
+        alertBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Update Course';
+      }
+    });
+  </script>
+</body>
+</html>
+

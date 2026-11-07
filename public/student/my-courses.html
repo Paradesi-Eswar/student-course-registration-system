@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Registered Courses - Student Course Registration System</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    @media print {
+      .sidebar, .topbar, .filter-bar, .btn-logout, .no-print {
+        display: none !important;
+      }
+      .main-wrapper {
+        margin-left: 0 !important;
+      }
+      .card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar no-print">
+      <div class="sidebar-header">
+        <a href="/student/dashboard.html" class="sidebar-brand">
+          <span>🎓</span>
+          <span>Student Portal</span>
+        </a>
+        <span class="sidebar-badge">Student</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigation</div>
+        <a href="/student/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/student/courses.html" class="sidebar-link">
+          <span class="icon">📖</span>
+          <span>Available Courses</span>
+        </a>
+        <a href="/student/register-course.html" class="sidebar-link">
+          <span class="icon">✍️</span>
+          <span>Course Registration</span>
+        </a>
+        <a href="/student/my-courses.html" class="sidebar-link active">
+          <span class="icon">📝</span>
+          <span>My Registrations</span>
+        </a>
+        <a href="/student/profile.html" class="sidebar-link">
+          <span class="icon">👤</span>
+          <span>Student Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-user-name">Student</span>
+          <span class="user-snippet-role" id="sidebar-user-roll">Roll No</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar no-print">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">My Registered Courses</h1>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print Slip</button>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Summary Stats Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Semester Enrollment Record</h2>
+              <p style="color: var(--text-muted); font-size: 0.88rem;">Official registration records and course statuses for your academic term.</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <div style="text-align: right;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Enrolled</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary);" id="total-count-badge">0 Courses</div>
+              </div>
+              <div style="height: 36px; width: 1px; background: var(--border-color);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Credit Load</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--success);" id="total-credits-badge">0 Credits</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Registered Courses Table Card -->
+        <div class="card">
+          <div class="card-header no-print">
+            <h3 class="card-title"><span>📋</span> Registered Course Details</h3>
+            <a href="/student/courses.html" class="btn btn-primary btn-sm">+ Register More Courses</a>
+          </div>
+
+          <div id="registered-courses-container">
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              Loading registrations...
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    async function loadMyCourses() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'student') {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        document.getElementById('sidebar-user-name').innerText = session.user.name;
+        document.getElementById('sidebar-user-roll').innerText = session.user.roll_no;
+
+        const data = await API.get('/api/student/my-courses');
+        if (!data.success) return;
+
+        document.getElementById('total-count-badge').innerText = `${data.totalCount} Course${data.totalCount === 1 ? '' : 's'}`;
+        document.getElementById('total-credits-badge').innerText = `${data.totalCredits} Credits`;
+
+        const container = document.getElementById('registered-courses-container');
+
+        if (data.courses.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📝</div>
+              <h4 class="empty-state-title">No Course Registrations</h4>
+              <p class="empty-state-text">You have not registered for any courses yet. Browse our course catalog to add subjects for this semester.</p>
+              <a href="/student/courses.html" class="btn btn-primary">Browse Available Courses</a>
+            </div>
+          `;
+          return;
+        }
+
+        let html = `
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Course Code</th>
+                  <th>Course Name</th>
+                  <th>Credits</th>
+                  <th>Department</th>
+                  <th>Semester</th>
+                  <th>Registration Date</th>
+                  <th>Registration Status</th>
+                  <th class="no-print" style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        data.courses.forEach((c, index) => {
+          const statusClass = (c.status || 'registered').toLowerCase();
+          html += `
+            <tr>
+              <td>${index + 1}</td>
+              <td><strong>${escapeHTML(c.course_code)}</strong></td>
+              <td>
+                <div style="font-weight: 600;">${escapeHTML(c.course_name)}</div>
+                ${c.description ? `<div style="font-size: 0.8rem; color: var(--text-muted); max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(c.description)}</div>` : ''}
+              </td>
+              <td><span class="badge badge-neutral">${c.credits}</span></td>
+              <td>${escapeHTML(c.department)}</td>
+              <td>Sem ${c.semester}</td>
+              <td>${escapeHTML(c.registration_date)}</td>
+              <td><span class="badge badge-${statusClass}">${escapeHTML(c.status)}</span></td>
+              <td class="no-print" style="text-align: right;">
+                <button class="btn btn-danger btn-sm" onclick="dropCourse(${c.registration_id}, '${escapeHTML(c.course_code)}')">
+                  Drop Course
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+
+        html += `
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        container.innerHTML = html;
+      } catch (err) {
+        console.error('Failed to load registered courses:', err);
+        showToast('Error loading your registrations.', 'error');
+      }
+    }
+
+    async function dropCourse(registrationId, courseCode) {
+      if (!confirm(`Are you sure you want to drop course ${courseCode}? This will cancel your enrollment.`)) {
+        return;
+      }
+
+      try {
+        const response = await API.delete(`/api/student/drop-course/${registrationId}`);
+        showToast(response.message || 'Course dropped successfully.', 'success');
+        loadMyCourses();
+      } catch (err) {
+        showToast(err.message || 'Failed to drop course.', 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadMyCourses);
+  </script>
+</body>
+</html>

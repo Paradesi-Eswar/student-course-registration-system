@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Available Courses - Student Course Registration System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/student/dashboard.html" class="sidebar-brand">
+          <span>🎓</span>
+          <span>Student Portal</span>
+        </a>
+        <span class="sidebar-badge">Student</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigation</div>
+        <a href="/student/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/student/courses.html" class="sidebar-link active">
+          <span class="icon">📖</span>
+          <span>Available Courses</span>
+        </a>
+        <a href="/student/register-course.html" class="sidebar-link">
+          <span class="icon">✍️</span>
+          <span>Course Registration</span>
+        </a>
+        <a href="/student/my-courses.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>My Registrations</span>
+        </a>
+        <a href="/student/profile.html" class="sidebar-link">
+          <span class="icon">👤</span>
+          <span>Student Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-user-name">Student</span>
+          <span class="user-snippet-role" id="sidebar-user-roll">Roll No</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Available Courses</h1>
+        </div>
+        <div class="topbar-right">
+          <a href="/student/my-courses.html" class="btn btn-secondary btn-sm">My Courses</a>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Filter and Search Bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <div class="search-input-wrapper">
+              <input type="text" id="filter-search" class="form-control" placeholder="🔍 Search course name, code...">
+            </div>
+
+            <div class="filter-item">
+              <select id="filter-department" class="form-select">
+                <option value="all">All Departments</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <select id="filter-semester" class="form-select">
+                <option value="all">All Semesters</option>
+              </select>
+            </div>
+
+            <button type="button" class="btn btn-secondary btn-sm" onclick="resetFilters()">Reset</button>
+          </div>
+          <div>
+            <span id="courses-count-text" style="font-size: 0.88rem; color: var(--text-muted); font-weight: 500;">
+              Loading courses...
+            </span>
+          </div>
+        </div>
+
+        <!-- Courses Cards Grid -->
+        <div id="courses-grid" class="courses-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Course Details & Registration Modal -->
+  <div class="modal-backdrop" id="course-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-course-title">Course Details</h3>
+        <button class="modal-close" onclick="closeCourseModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-course-body">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="modal-footer" id="modal-course-footer">
+        <button class="btn btn-secondary" onclick="closeCourseModal()">Close</button>
+        <button class="btn btn-primary" id="modal-register-btn">Register for this Course</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let allCourses = [];
+    let currentCourseForModal = null;
+
+    async function loadCourses() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'student') {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        document.getElementById('sidebar-user-name').innerText = session.user.name;
+        document.getElementById('sidebar-user-roll').innerText = session.user.roll_no;
+
+        const department = document.getElementById('filter-department').value;
+        const semester = document.getElementById('filter-semester').value;
+        const search = document.getElementById('filter-search').value.trim();
+
+        const params = new URLSearchParams();
+        if (department && department !== 'all') params.append('department', department);
+        if (semester && semester !== 'all') params.append('semester', semester);
+        if (search) params.append('search', search);
+
+        const data = await API.get(`/api/student/courses?${params.toString()}`);
+        if (!data.success) return;
+
+        allCourses = data.courses;
+
+        // Populate dropdowns once if empty
+        const deptSelect = document.getElementById('filter-department');
+        if (deptSelect.options.length === 1 && data.filterOptions?.departments) {
+          data.filterOptions.departments.forEach(dept => {
+            const opt = document.createElement('option');
+            opt.value = dept;
+            opt.innerText = dept;
+            deptSelect.appendChild(opt);
+          });
+        }
+
+        const semSelect = document.getElementById('filter-semester');
+        if (semSelect.options.length === 1 && data.filterOptions?.semesters) {
+          data.filterOptions.semesters.forEach(sem => {
+            const opt = document.createElement('option');
+            opt.value = sem;
+            opt.innerText = `Semester ${sem}`;
+            semSelect.appendChild(opt);
+          });
+        }
+
+        renderCoursesGrid(allCourses);
+      } catch (err) {
+        console.error('Failed to load courses:', err);
+        showToast('Error loading courses catalog.', 'error');
+      }
+    }
+
+    function renderCoursesGrid(courses) {
+      const grid = document.getElementById('courses-grid');
+      const countText = document.getElementById('courses-count-text');
+      countText.innerText = `Showing ${courses.length} course${courses.length === 1 ? '' : 's'}`;
+
+      if (courses.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-state-icon">🔍</div>
+            <h4 class="empty-state-title">No Courses Found</h4>
+            <p class="empty-state-text">No courses match the current filter criteria. Try adjusting your search or filters.</p>
+            <button class="btn btn-secondary" onclick="resetFilters()">Reset Filters</button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = courses.map(c => {
+        const isRegistered = Boolean(c.is_registered);
+        const statusClass = (c.registration_status || 'registered').toLowerCase();
+
+        return `
+          <div class="course-card">
+            <div class="course-card-top">
+              <span class="course-code-pill">${escapeHTML(c.course_code)}</span>
+              <span class="badge badge-neutral">${c.credits} Credits</span>
+            </div>
+
+            <div class="course-card-body">
+              <h3 class="course-name">${escapeHTML(c.course_name)}</h3>
+              <p class="course-description">${escapeHTML(c.description || 'No description provided.')}</p>
+
+              <div class="course-meta">
+                <div class="meta-item">
+                  <span>🏛️</span>
+                  <span><strong>Dept:</strong> ${escapeHTML(c.department)}</span>
+                </div>
+                <div class="meta-item">
+                  <span>📅</span>
+                  <span><strong>Semester:</strong> ${c.semester}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="course-card-footer">
+              <button class="btn btn-outline btn-sm" onclick="openCourseModal(${c.course_id})">
+                Details
+              </button>
+
+              ${isRegistered ? `
+                <span class="badge badge-${statusClass}">
+                  ✓ ${escapeHTML(c.registration_status || 'Registered')}
+                </span>
+              ` : `
+                <button class="btn btn-primary btn-sm" onclick="registerForCourse(${c.course_id}, '${escapeHTML(c.course_code)}')">
+                  Register Course
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function registerForCourse(courseId, courseCode) {
+      if (!confirm(`Are you sure you want to register for ${courseCode}?`)) {
+        return;
+      }
+
+      try {
+        const response = await API.post('/api/student/register-course', { course_id: courseId });
+        showToast(response.message || 'Successfully registered!', 'success');
+        closeCourseModal();
+        loadCourses(); // Refresh catalog to update status badges
+      } catch (err) {
+        showToast(err.message || 'Registration failed.', 'error');
+      }
+    }
+
+    function openCourseModal(courseId) {
+      const course = allCourses.find(c => c.course_id === courseId);
+      if (!course) return;
+
+      currentCourseForModal = course;
+      document.getElementById('modal-course-title').innerText = `${course.course_code} - ${course.course_name}`;
+      
+      const isRegistered = Boolean(course.is_registered);
+      const statusClass = (course.registration_status || '').toLowerCase();
+
+      document.getElementById('modal-course-body').innerHTML = `
+        <div style="margin-bottom: 1rem;">
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <span class="badge badge-neutral">${course.credits} Credits</span>
+            <span class="badge badge-neutral">${escapeHTML(course.department)}</span>
+            <span class="badge badge-neutral">Semester ${course.semester}</span>
+            ${isRegistered ? `<span class="badge badge-${statusClass}">Status: ${escapeHTML(course.registration_status)}</span>` : ''}
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Course Description & Syllabus</h4>
+          <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            ${escapeHTML(course.description || 'No detailed course description available for this syllabus.')}
+          </p>
+        </div>
+
+        ${isRegistered ? `
+          <div class="alert alert-info" style="margin-bottom: 0;">
+            ℹ️ You are currently enrolled in this course (Registration Date: ${escapeHTML(course.registration_date || 'N/A')}). Duplicate registrations are prevented.
+          </div>
+        ` : `
+          <div class="alert alert-success" style="margin-bottom: 0;">
+            ✅ You are eligible to register for this course. Click Register below to confirm.
+          </div>
+        `}
+      `;
+
+      const registerBtn = document.getElementById('modal-register-btn');
+      if (isRegistered) {
+        registerBtn.style.display = 'none';
+      } else {
+        registerBtn.style.display = 'inline-flex';
+        registerBtn.onclick = () => registerForCourse(course.course_id, course.course_code);
+      }
+
+      document.getElementById('course-modal').classList.add('open');
+    }
+
+    function closeCourseModal() {
+      document.getElementById('course-modal').classList.remove('open');
+      currentCourseForModal = null;
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-department').value = 'all';
+      document.getElementById('filter-semester').value = 'all';
+      document.getElementById('filter-search').value = '';
+      loadCourses();
+    }
+
+    // Attach event listeners for real-time search and filter change
+    document.getElementById('filter-department').addEventListener('change', loadCourses);
+    document.getElementById('filter-semester').addEventListener('change', loadCourses);
+    
+    let debounceTimer;
+    document.getElementById('filter-search').addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(loadCourses, 300);
+    });
+
+    document.addEventListener('DOMContentLoaded', loadCourses);
+  </script>
+</body>
+</html>

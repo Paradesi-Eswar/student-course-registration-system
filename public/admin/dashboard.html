@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Student Course Registration System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin/dashboard.html" class="sidebar-brand">
+          <span>🛡️</span>
+          <span>Admin Portal</span>
+        </a>
+        <span class="sidebar-badge" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">Admin</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Administration</div>
+        <a href="/admin/dashboard.html" class="sidebar-link active">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/courses.html" class="sidebar-link">
+          <span class="icon">📚</span>
+          <span>Manage Courses</span>
+        </a>
+        <a href="/admin/add-course.html" class="sidebar-link">
+          <span class="icon">➕</span>
+          <span>Add New Course</span>
+        </a>
+        <a href="/admin/students.html" class="sidebar-link">
+          <span class="icon">👨‍🎓</span>
+          <span>Registered Students</span>
+        </a>
+        <a href="/admin/registrations.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>All Registrations</span>
+        </a>
+        <a href="/admin/course-students.html" class="sidebar-link">
+          <span class="icon">👥</span>
+          <span>Course Roster</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-admin-name">Administrator</span>
+          <span class="user-snippet-role">Super Admin</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Administrator Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <a href="/admin/add-course.html" class="btn btn-primary btn-sm">+ Add Course</a>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">👨‍🎓</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-students">0</div>
+              <div class="stat-label">Registered Students</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">📚</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-courses">0</div>
+              <div class="stat-label">Active Courses</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">📝</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-registrations">0</div>
+              <div class="stat-label">Total Registrations</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon amber">🏛️</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-departments">0</div>
+              <div class="stat-label">Academic Departments</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions & Department Breakdown Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- Quick Action Buttons -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><span>⚡</span> Quick Management Actions</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+              <a href="/admin/add-course.html" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
+                <span style="font-size: 1.25rem;">➕</span>
+                <span style="text-align: left;">
+                  <div style="font-weight: 700;">Add Course</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Create new subject</div>
+                </span>
+              </a>
+              <a href="/admin/courses.html" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
+                <span style="font-size: 1.25rem;">📚</span>
+                <span style="text-align: left;">
+                  <div style="font-weight: 700;">Courses</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Edit or remove</div>
+                </span>
+              </a>
+              <a href="/admin/students.html" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
+                <span style="font-size: 1.25rem;">👨‍🎓</span>
+                <span style="text-align: left;">
+                  <div style="font-weight: 700;">Students</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">View enrollments</div>
+                </span>
+              </a>
+              <a href="/admin/registrations.html" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
+                <span style="font-size: 1.25rem;">📝</span>
+                <span style="text-align: left;">
+                  <div style="font-weight: 700;">Registrations</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Manage statuses</div>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Department Distribution -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><span>🏛️</span> Department Enrollments</h3>
+            </div>
+            <div id="dept-list-container" style="display: flex; flex-direction: column; gap: 0.65rem;">
+              <div style="text-align: center; color: var(--text-muted); padding: 1rem;">Loading departments...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Registrations Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span>🕒</span> Recent Course Registrations</h3>
+            <a href="/admin/registrations.html" class="btn btn-outline btn-sm">View All Registrations</a>
+          </div>
+
+          <div id="recent-registrations-container">
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              Loading recent registrations...
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    async function loadAdminDashboard() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'admin') {
+          window.location.href = '/login.html?role=admin';
+          return;
+        }
+
+        document.getElementById('sidebar-admin-name').innerText = session.user.name || 'Administrator';
+
+        const data = await API.get('/api/admin/dashboard-stats');
+        if (!data.success) return;
+
+        // Populate metrics
+        document.getElementById('stat-students').innerText = data.stats.total_students;
+        document.getElementById('stat-courses').innerText = data.stats.total_courses;
+        document.getElementById('stat-registrations').innerText = data.stats.total_registrations;
+        document.getElementById('stat-departments').innerText = data.stats.total_departments;
+
+        // Department list
+        const deptContainer = document.getElementById('dept-list-container');
+        if (data.deptRegistrations && data.deptRegistrations.length > 0) {
+          deptContainer.innerHTML = data.deptRegistrations.map(d => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+              <span style="font-weight: 600; font-size: 0.9rem;">${escapeHTML(d.department)}</span>
+              <span class="badge badge-neutral">${d.reg_count} registrations</span>
+            </div>
+          `).join('');
+        } else {
+          deptContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 0.88rem;">No department data available.</div>`;
+        }
+
+        // Recent registrations table
+        const regContainer = document.getElementById('recent-registrations-container');
+        if (data.recentRegistrations && data.recentRegistrations.length > 0) {
+          let html = `
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Reg ID</th>
+                    <th>Student Name</th>
+                    <th>Roll Number</th>
+                    <th>Course Code</th>
+                    <th>Course Name</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
+          data.recentRegistrations.forEach(r => {
+            const statusClass = (r.status || 'registered').toLowerCase();
+            html += `
+              <tr>
+                <td>#REG-${r.registration_id}</td>
+                <td><strong>${escapeHTML(r.student_name)}</strong></td>
+                <td><span class="badge badge-neutral">${escapeHTML(r.roll_no)}</span></td>
+                <td><strong>${escapeHTML(r.course_code)}</strong></td>
+                <td>${escapeHTML(r.course_name)}</td>
+                <td>${escapeHTML(r.registration_date)}</td>
+                <td><span class="badge badge-${statusClass}">${escapeHTML(r.status)}</span></td>
+              </tr>
+            `;
+          });
+
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+          regContainer.innerHTML = html;
+        } else {
+          regContainer.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <h4 class="empty-state-title">No Registrations Yet</h4>
+              <p class="empty-state-text">Students have not registered for any courses yet.</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.error('Failed to load admin dashboard:', err);
+        showToast('Authentication failed or session expired.', 'error');
+        setTimeout(() => { window.location.href = '/login.html?role=admin'; }, 1000);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAdminDashboard);
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard - Student Course Registration System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/student/dashboard.html" class="sidebar-brand">
+          <span>🎓</span>
+          <span>Student Portal</span>
+        </a>
+        <span class="sidebar-badge">Student</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigation</div>
+        <a href="/student/dashboard.html" class="sidebar-link active">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/student/courses.html" class="sidebar-link">
+          <span class="icon">📖</span>
+          <span>Available Courses</span>
+        </a>
+        <a href="/student/register-course.html" class="sidebar-link">
+          <span class="icon">✍️</span>
+          <span>Course Registration</span>
+        </a>
+        <a href="/student/my-courses.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>My Registrations</span>
+        </a>
+        <a href="/student/profile.html" class="sidebar-link">
+          <span class="icon">👤</span>
+          <span>Student Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-user-name">Loading...</span>
+          <span class="user-snippet-role" id="sidebar-user-roll">Roll No</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Student Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <span id="topbar-welcome" style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Welcome</span>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <main class="content-area">
+        <!-- Welcome Banner -->
+        <div class="card" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: #ffffff; padding: 2rem;">
+          <h2 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem;" id="banner-welcome">Hello, Student!</h2>
+          <p style="opacity: 0.9; max-width: 650px; font-size: 0.95rem; line-height: 1.6;">
+            Welcome to your semester course registration center. Explore new courses, review registered subjects, and monitor your academic progress.
+          </p>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;">
+            <a href="/student/courses.html" class="btn btn-primary" style="background: #ffffff; color: #1e40af; border: none;">Browse Available Courses</a>
+            <a href="/student/my-courses.html" class="btn btn-outline" style="color: #ffffff; border-color: rgba(255,255,255,0.4);">View My Registrations</a>
+          </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">📚</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-courses">0</div>
+              <div class="stat-label">Registered Courses</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">⚡</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-credits">0</div>
+              <div class="stat-label">Total Credits Registered</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">🏛️</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-branch" style="font-size: 1.15rem; word-break: break-word;">-</div>
+              <div class="stat-label">Department / Branch</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon amber">🆔</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-roll" style="font-size: 1.25rem;">-</div>
+              <div class="stat-label">Student Roll Number</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Registered Courses Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span>📝</span> My Registered Courses</h3>
+            <a href="/student/my-courses.html" class="btn btn-outline btn-sm">View All</a>
+          </div>
+
+          <div id="dashboard-courses-container">
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              Loading your registered courses...
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    async function loadStudentDashboard() {
+      try {
+        const session = await API.getSession();
+        if (!session.authenticated || session.user.role !== 'student') {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        const user = session.user;
+        document.getElementById('sidebar-user-name').innerText = user.name;
+        document.getElementById('sidebar-user-roll').innerText = user.roll_no;
+        document.getElementById('topbar-welcome').innerText = `Welcome, ${user.name}`;
+        document.getElementById('banner-welcome').innerText = `Welcome back, ${user.name}!`;
+
+        // Load profile and stats
+        const profileData = await API.get('/api/student/profile');
+        if (profileData.success) {
+          const student = profileData.student;
+          document.getElementById('stat-courses').innerText = student.total_courses;
+          document.getElementById('stat-credits').innerText = student.total_credits;
+          document.getElementById('stat-branch').innerText = student.branch || 'Not Specified';
+          document.getElementById('stat-roll').innerText = student.roll_no;
+        }
+
+        // Load registered courses
+        const myCoursesData = await API.get('/api/student/my-courses');
+        const container = document.getElementById('dashboard-courses-container');
+
+        if (myCoursesData.success && myCoursesData.courses.length > 0) {
+          let html = `
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Course Code</th>
+                    <th>Course Name</th>
+                    <th>Credits</th>
+                    <th>Department</th>
+                    <th>Semester</th>
+                    <th>Registration Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
+          myCoursesData.courses.slice(0, 5).forEach(c => {
+            const statusClass = (c.status || '').toLowerCase();
+            html += `
+              <tr>
+                <td><strong>${escapeHTML(c.course_code)}</strong></td>
+                <td>${escapeHTML(c.course_name)}</td>
+                <td><span class="badge badge-neutral">${c.credits} Credits</span></td>
+                <td>${escapeHTML(c.department)}</td>
+                <td>Sem ${c.semester}</td>
+                <td>${escapeHTML(c.registration_date)}</td>
+                <td><span class="badge badge-${statusClass}">${escapeHTML(c.status)}</span></td>
+              </tr>
+            `;
+          });
+
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <h4 class="empty-state-title">No Courses Registered Yet</h4>
+              <p class="empty-state-text">You have not registered for any courses this semester. Start exploring the available course catalog now.</p>
+              <a href="/student/courses.html" class="btn btn-primary">Browse Available Courses</a>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.error('Failed to load student dashboard:', err);
+        showToast('Failed to load dashboard data. Please log in again.', 'error');
+        setTimeout(() => { window.location.href = '/login.html'; }, 1000);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadStudentDashboard);
+  </script>
+</body>
+</html>

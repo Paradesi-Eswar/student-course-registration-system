@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Course - Admin Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin/dashboard.html" class="sidebar-brand">
+          <span>🛡️</span>
+          <span>Admin Portal</span>
+        </a>
+        <span class="sidebar-badge" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">Admin</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Administration</div>
+        <a href="/admin/dashboard.html" class="sidebar-link">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/courses.html" class="sidebar-link">
+          <span class="icon">📚</span>
+          <span>Manage Courses</span>
+        </a>
+        <a href="/admin/add-course.html" class="sidebar-link active">
+          <span class="icon">➕</span>
+          <span>Add New Course</span>
+        </a>
+        <a href="/admin/students.html" class="sidebar-link">
+          <span class="icon">👨‍🎓</span>
+          <span>Registered Students</span>
+        </a>
+        <a href="/admin/registrations.html" class="sidebar-link">
+          <span class="icon">📝</span>
+          <span>All Registrations</span>
+        </a>
+        <a href="/admin/course-students.html" class="sidebar-link">
+          <span class="icon">👥</span>
+          <span>Course Roster</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <span class="user-snippet-name" id="sidebar-admin-name">Administrator</span>
+          <span class="user-snippet-role">Super Admin</span>
+        </div>
+        <button class="btn btn-outline btn-sm btn-logout" title="Log Out" style="color: #cbd5e1; border-color: #334155;">🚪</button>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" aria-label="Toggle Navigation">☰</button>
+          <h1 class="topbar-title">Add New Course</h1>
+        </div>
+        <div class="topbar-right">
+          <a href="/admin/courses.html" class="btn btn-secondary btn-sm">← Back to Courses</a>
+          <button class="btn btn-secondary btn-sm btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <div style="max-width: 720px; margin: 0 auto;">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><span>➕</span> Create New Academic Course</h2>
+            </div>
+
+            <!-- Alert box -->
+            <div id="add-course-alert" class="alert alert-danger" style="display: none;"></div>
+
+            <form id="add-course-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="course_code">Course Code <span class="required">*</span></label>
+                  <input type="text" id="course_code" class="form-control" placeholder="e.g. CS501" required>
+                  <span class="form-hint">Must be a unique course identifier.</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="credits">Academic Credits <span class="required">*</span></label>
+                  <input type="number" id="credits" class="form-control" placeholder="e.g. 4" min="1" max="10" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="course_name">Course Name / Title <span class="required">*</span></label>
+                <input type="text" id="course_name" class="form-control" placeholder="e.g. Advanced Machine Learning" required>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="department">Academic Department <span class="required">*</span></label>
+                  <input type="text" id="department" class="form-control" placeholder="e.g. Computer Science" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="semester">Semester Number <span class="required">*</span></label>
+                  <input type="number" id="semester" class="form-control" placeholder="e.g. 6" min="1" max="12" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="description">Course Description & Syllabus</label>
+                <textarea id="description" class="form-control" placeholder="Detailed outline of topics covered, prerequisites, lab requirements..."></textarea>
+              </div>
+
+              <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <a href="/admin/courses.html" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" id="btn-submit-course">Create Course</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = await API.getSession();
+      if (!session.authenticated || session.user.role !== 'admin') {
+        window.location.href = '/login.html?role=admin';
+        return;
+      }
+      document.getElementById('sidebar-admin-name').innerText = session.user.name || 'Administrator';
+    });
+
+    document.getElementById('add-course-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('add-course-alert');
+      const submitBtn = document.getElementById('btn-submit-course');
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Creating Course...';
+
+      const payload = {
+        course_code: document.getElementById('course_code').value.trim(),
+        course_name: document.getElementById('course_name').value.trim(),
+        credits: parseInt(document.getElementById('credits').value, 10),
+        department: document.getElementById('department').value.trim(),
+        semester: parseInt(document.getElementById('semester').value, 10),
+        description: document.getElementById('description').value.trim()
+      };
+
+      try {
+        const response = await API.post('/api/admin/courses', payload);
+        showToast(response.message || 'Course added successfully!', 'success');
+        setTimeout(() => {
+          window.location.href = '/admin/courses.html';
+        }, 800);
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.innerText = err.message || 'Failed to add course.';
+        alertBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Create Course';
+      }
+    });
+  </script>
+</body>
+</html>
+

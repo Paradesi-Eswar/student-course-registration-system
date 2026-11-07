@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Course Registration System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="public-header">
+    <nav class="public-navbar">
+      <a href="/" class="brand-logo">
+        <span class="brand-icon">🎓</span>
+        <span>CourseReg Portal</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/" class="active">Home</a></li>
+        <li><a href="/login.html">Login</a></li>
+        <li><a href="/register.html" class="btn btn-primary btn-sm" style="color: #ffffff;">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <span class="hero-badge">Campus Academic Management</span>
+      <h1 class="hero-title">Student Course Registration System</h1>
+      <p class="hero-subtitle">
+        A streamlined, automated portal for college students to explore academic curriculums, register for semester courses, and track registration status seamlessly.
+      </p>
+      <div class="hero-actions">
+        <a href="/login.html" class="btn btn-primary btn-lg" style="background:#ffffff; color:#1d4ed8;">Student Login</a>
+        <a href="/register.html" class="btn btn-outline btn-lg" style="color:#ffffff; border-color:rgba(255,255,255,0.4);">New Student Register</a>
+        <a href="/login.html?role=admin" class="btn btn-outline btn-lg" style="color:#ffffff; border-color:rgba(255,255,255,0.4);">Admin Portal</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="features-section">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📚</div>
+        <h3 class="feature-title">Course Catalog</h3>
+        <p class="feature-text">
+          Browse comprehensive course offerings with details including course code, credits, department, semester, and syllabus outlines.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">Instant Registration</h3>
+        <p class="feature-text">
+          Register for available courses with real-time validation and automated prevention of duplicate registrations.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3 class="feature-title">Administrative Control</h3>
+        <p class="feature-text">
+          Administrators can manage course catalogs, monitor enrollment rosters, update registration records, and track students per course.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Overview Details -->
+  <main style="max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem;">
+    <div class="card" style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <div class="card-header" style="margin-bottom: 0;">
+        <h2 class="card-title">✨ System Highlights & Academic Workflow</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+        <div>
+          <h4 style="font-weight: 700; margin-bottom: 0.5rem; color: var(--primary);">For Students</h4>
+          <ul style="padding-left: 1.25rem; color: var(--text-muted); line-height: 1.8;">
+            <li>Create personal academic accounts with unique Roll Number.</li>
+            <li>Explore departmental curriculum filtered by semester.</li>
+            <li>Instant duplicate registration guard.</li>
+            <li>Track registered courses, total credits, and enrollment status.</li>
+            <li>View detailed student academic profile.</li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="font-weight: 700; margin-bottom: 0.5rem; color: var(--primary);">For Administrators</h4>
+          <ul style="padding-left: 1.25rem; color: var(--text-muted); line-height: 1.8;">
+            <li>Full CRUD capabilities on college course offerings.</li>
+            <li>Inspect complete list of registered students.</li>
+            <li>Filter and view students enrolled in specific courses.</li>
+            <li>Manage registration statuses (Approved, Registered, Pending).</li>
+            <li>Referential integrity maintained across all academic records.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.88rem; border-top: 1px solid var(--border-color); background: #ffffff;">
+    <p>&copy; 2026 Student Course Registration System. Built with HTML5, CSS3, JavaScript, Node.js, Express, and MySQL.</p>
+  </footer>
+
+  <script src="/js/api.js"></script>
+</body>
+</html>
+
